@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Demo project</title>
+    <link rel="stylesheet" href="style.css" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+      integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    />
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+  </head>
+  <body>
+    <div class="wrapper">
+      <div class="search">
+        <span class="text">Select a user to start chat</span>
+        <input
+          type="text"
+          id="searchInput"
+          placeholder="Enter name to search..."
+        />
+        <button id="searchButton"><i class="fas fa-search"></i></button>
+      </div>
+      <div class="totalInfo">
+        <div id="userData"></div>
+        <div id="reposData"></div>
+      </div>
+    </div>
+
+    <script>
+      $(document).ready(function () {
+        $("#searchButton").click(function () {
+          const username = $("#searchInput").val();
+          const userDataElement = $("#userData");
+          const reposDataElement = $("#reposData");
+
+          userDataElement.html("");
+          reposDataElement.html("");
+
+          $.ajax({
+            url: `https://api.github.com/users/${username}`,
+            method: "GET",
+            success: function (userData) {
+              userDataElement.html(`
+                <div class="user-info">
+                  <img src="${
+                    userData.avatar_url
+                  }" alt="User Avatar" class="avatar" />
+                  <h2>${userData.name}</h2>
+                  <p>Username: ${userData.login}</p>
+                  <p>Location: ${userData.location || "Not specified"}</p>
+                  <p>Followers: ${userData.followers}</p>
+                  <p>Following: ${userData.following}</p>
+                  <p>Public Repositories: ${userData.public_repos}</p>
+                  <p>Member Since: ${new Date(
+                    userData.created_at
+                  ).toLocaleDateString()}</p>
+                  <p>Last Updated: ${new Date(
+                    userData.updated_at
+                  ).toLocaleDateString()}</p>
+                  <p><a href="${
+                    userData.html_url
+                  }" target="_blank" rel="noopener noreferrer">GitHub Profile</a></p>
+                </div>
+              `);
+
+              $.ajax({
+                url: `https://api.github.com/users/${username}/repos`,
+                method: "GET",
+                success: function (reposData) {
+                  if (reposData.length > 0) {
+                    reposDataElement.html("<h3>Repositories:</h3>");
+                    reposData.forEach(function (repo) {
+                      reposDataElement.append(`
+                        <div class="repo">
+                          <p><strong>${repo.name}</strong></p>
+                          <p>Language: ${repo.language || "Not specified"}</p>
+                          <p>Stars: ${repo.stargazers_count}</p>
+                          <p>Forks: ${repo.forks}</p>
+                          <p><a href="${
+                            repo.html_url
+                          }" target="_blank" rel="noopener noreferrer">View on GitHub</a></p>
+                        </div>
+                      `);
+                    });
+                  } else {
+                    reposDataElement.html("<p>No repositories found</p>");
+                  }
+                },
+                error: function () {
+                  console.error("Error fetching repositories data");
+                  reposDataElement.html("<p>Error fetching repositories</p>");
+                },
+              });
+            },
+            error: function () {
+              console.error("Error fetching user data");
+              userDataElement.html("<p>User not found</p>");
+            },
+          });
+        });
+      });
+    </script>
+  </body>
+</html>
